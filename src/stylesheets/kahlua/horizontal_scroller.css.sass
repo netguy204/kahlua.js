@@ -1,0 +1,32 @@
+.horizontal_scroller
+  overflow: hidden
+  position: relative
+  height: 180px
+
+  .contained
+    position: relative
+    display: block
+    width: 1000px
+
+  &:hover
+    .scroller
+      opacity: 0.9
+      transition: 200ms ease
+      text-decoration: none
+
+  .scroller
+    width: 40px
+    height: 180px
+    background-color: #aaa
+    opacity: 0.2
+    line-height: 180px
+    font-size: 40px
+    color: #333
+
+  .scroll-left
+    position: absolute
+    left: 0px
+
+  .scroll-right
+    position: absolute
+    right: 0px

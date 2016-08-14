@@ -1,0 +1,7 @@
+.horizontal_scroller
+  .contained
+    {{#template : {nodes: $componentTemplateNodes, data: $parent} /}}
+  %a.scroller.scroll-left(data-bind="click : scrollLeft, visible : left_button_visible")
+    %i.icon-chevron-left
+  %a.scroller.scroll-right(data-bind="click : scrollRight, visible : right_button_visible")
+    %i.icon-chevron-right

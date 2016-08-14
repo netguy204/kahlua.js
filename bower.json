@@ -1,0 +1,8 @@
+{
+  "name": "kahlua",
+  "version": "1.0.0",
+  "main": [
+    "./dist/css/kahlua.css",
+    "./dist/js/kahlua.js",
+  ]
+}
