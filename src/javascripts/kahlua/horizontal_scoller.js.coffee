@@ -1,4 +1,4 @@
-class Native.main.HorizontalScroller extends QS.View
+class Kahlua.HorizontalScroller extends QS.View
   @registerComponent 'kahlua-horizontal_scroller',
     template_id: 'kahlua-horizontal_scroller'
     synchronous: true

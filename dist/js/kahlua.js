@@ -1,23 +1,15 @@
 (function() {
-
+  window.Kahlua = window.Kahlua || {};
 
 }).call(this);
 
-(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function(obj) {
-obj || (obj = {});
-var __t, __p = '', __e = _.escape;
-with (obj) {
-__p += '<div class="horizontal_scroller"><div class="contained">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind="click : scrollLeft, visible : left_button_visible" class="scroller scroll-left"><i class="icon-chevron-left"></i></a><a data-bind="click : scrollRight, visible : right_button_visible" class="scroller scroll-right"><i class="icon-chevron-right"></i></a></div>';
-
-}
-return __p
-};
+(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Native.main.HorizontalScroller = (function(superClass) {
+  Kahlua.HorizontalScroller = (function(superClass) {
     extend(HorizontalScroller, superClass);
 
     function HorizontalScroller() {
