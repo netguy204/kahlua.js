@@ -81,6 +81,7 @@
 
 }).call(this);
 
+(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i>{{#if : pstate() == PSTATE_CONTENT_CONSUMED }}There\'s nothing left...{{/if }}</div></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -91,11 +92,9 @@
 
     function ScrollingPagination() {
       this.PSH_enterIdle = bind(this.PSH_enterIdle, this);
-      this.onResultSaidNoMore = bind(this.onResultSaidNoMore, this);
-      this.onPageFetchFinish = bind(this.onPageFetchFinish, this);
-      this.onPageFetchStart = bind(this.onPageFetchStart, this);
-      this.onFirstFetchFinish = bind(this.onFirstFetchFinish, this);
-      this.onFirstFetchStart = bind(this.onFirstFetchStart, this);
+      this.onContentConsumed = bind(this.onContentConsumed, this);
+      this.onFetchFinish = bind(this.onFetchFinish, this);
+      this.onFetchStart = bind(this.onFetchStart, this);
       this.PS_canaryVisible = bind(this.PS_canaryVisible, this);
       this.onStart = bind(this.onStart, this);
       this.dispose = bind(this.dispose, this);
@@ -111,19 +110,15 @@
 
     ScrollingPagination.prototype.PSTATE_START = 0;
 
-    ScrollingPagination.prototype.PSTATE_FIRSTFETCH = 1;
+    ScrollingPagination.prototype.PSTATE_FETCHING = 1;
 
     ScrollingPagination.prototype.PSTATE_PRE_IDLE_COOLDOWN = 2;
 
     ScrollingPagination.prototype.PSTATE_IDLE = 3;
 
-    ScrollingPagination.prototype.PSTATE_PAGEFETCHING = 4;
+    ScrollingPagination.prototype.PSTATE_CONTENT_CONSUMED = 4;
 
-    ScrollingPagination.prototype.PSTATE_PAGERENDERING = 5;
-
-    ScrollingPagination.prototype.PSTATE_CONTENT_CONSUMED = 6;
-
-    ScrollingPagination.prototype.PSTATE_ERROR = 7;
+    ScrollingPagination.prototype.PSTATE_ERROR = 5;
 
     ScrollingPagination.prototype.init = function() {
       this.pstate = ko.observable(this.PSTATE_START);
@@ -150,9 +145,7 @@
       })(this));
       this.isDataLoading = ko.pureComputed((function(_this) {
         return function() {
-          var state;
-          state = _this.pstate();
-          return state === _this.PSTATE_FIRSTFETCH || state === _this.PSTATE_PAGEFETCHING;
+          return _this.pstate() === _this.PSTATE_FETCHING;
         };
       })(this));
       this.canary_checker = setInterval((function(_this) {
@@ -187,61 +180,37 @@
     ScrollingPagination.prototype.PS_canaryVisible = function() {
       switch (this.pstate()) {
         case this.PSTATE_IDLE:
-          this.delegate.fetchNext(this);
-          return this.pstate(this.PSTATE_PAGEFETCHING);
+          return this.delegate.fetchNext(this);
       }
     };
 
-    ScrollingPagination.prototype.onFirstFetchStart = function() {
+    ScrollingPagination.prototype.onFetchStart = function() {
       switch (this.pstate()) {
         case this.PSTATE_START:
         case this.PSTATE_IDLE:
-        case this.PSTATE_CONTENT_CONSUMED:
-        case this.PSTATE_FIRSTFETCH:
-          return this.pstate(this.PSTATE_FIRSTFETCH);
+          return this.pstate(this.PSTATE_FETCHING);
         default:
-          return console.log("got PS_firstFetchStart in state " + (this.pstate()));
+          return console.log("got PS_fetchStart in state " + (this.pstate()));
       }
     };
 
-    ScrollingPagination.prototype.onFirstFetchFinish = function() {
+    ScrollingPagination.prototype.onFetchFinish = function() {
       switch (this.pstate()) {
-        case this.PSTATE_FIRSTFETCH:
+        case this.PSTATE_FETCHING:
           return this.PSH_enterIdle();
         case this.PSTATE_CONTENT_CONSUMED:
           break;
         default:
-          return console.log("got PS_firstFetchFinish in state " + (this.pstate()));
+          return console.log("got PS_fetchFinish in state " + (this.pstate()));
       }
     };
 
-    ScrollingPagination.prototype.onPageFetchStart = function() {
+    ScrollingPagination.prototype.onContentConsumed = function() {
       switch (this.pstate()) {
-        case this.PSTATE_IDLE:
-          return this.pstate(this.PSTATE_PAGEFETCHING);
-        default:
-          return console.log("got PS_pageFetchStart in state " + (this.pstate()));
-      }
-    };
-
-    ScrollingPagination.prototype.onPageFetchFinish = function() {
-      switch (this.pstate()) {
-        case this.PSTATE_PAGEFETCHING:
-          return this.PSH_enterIdle();
-        case this.PSTATE_CONTENT_CONSUMED:
-          break;
-        default:
-          return console.log("got PS_pageFetchFinish in state " + (this.pstate()));
-      }
-    };
-
-    ScrollingPagination.prototype.onResultSaidNoMore = function() {
-      switch (this.pstate()) {
-        case this.PSTATE_FIRSTFETCH:
-        case this.PSTATE_PAGEFETCHING:
+        case this.PSTATE_FETCHING:
           return this.pstate(this.PSTATE_CONTENT_CONSUMED);
         default:
-          return console.log("got PS_resultSaidNoMore in state " + (this.pstate()));
+          return console.log("got PS_contentConsumed in state " + (this.pstate()));
       }
     };
 
@@ -261,5 +230,3 @@
   })(QS.View);
 
 }).call(this);
-
-(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i>{{#if : pstate() == PSTATE_CONTENT_CONSUMED }}There\'s nothing left...{{/if }}</div></div>"; };

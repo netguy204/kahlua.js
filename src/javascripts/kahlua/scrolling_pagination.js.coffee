@@ -5,22 +5,18 @@ class Kahlua.ScrollingPagination extends QS.View
 
   # states related to pagination
   PSTATE_START: 0
-  PSTATE_FIRSTFETCH: 1
+  PSTATE_FETCHING: 1
   PSTATE_PRE_IDLE_COOLDOWN: 2
   PSTATE_IDLE: 3
-  PSTATE_PAGEFETCHING: 4
-  PSTATE_PAGERENDERING: 5
-  PSTATE_CONTENT_CONSUMED: 6
-  PSTATE_ERROR: 7
+  PSTATE_CONTENT_CONSUMED: 4
+  PSTATE_ERROR: 5
 
   # events related to pagination
   #
   # PS_canaryVisible
-  # PS_firstFetchStart
-  # PS_firstFetchFinish
-  # PS_pageFetchStart
-  # PS_pageFetchFinish
-  # PS_resultSaidNoMore
+  # PS_fetchStart
+  # PS_fetchFinish
+  # PS_contentConsumed
 
   init : =>
     # current pagination state
@@ -43,8 +39,7 @@ class Kahlua.ScrollingPagination extends QS.View
       @pstate() == @PSTATE_START
 
     @isDataLoading = ko.pureComputed =>
-      state = @pstate()
-      state == @PSTATE_FIRSTFETCH || state == @PSTATE_PAGEFETCHING
+      @pstate() == @PSTATE_FETCHING
 
     @canary_checker = setInterval( =>
       @updateCanaryPosition()
@@ -75,47 +70,30 @@ class Kahlua.ScrollingPagination extends QS.View
     switch @pstate()
       when @PSTATE_IDLE
         @delegate.fetchNext(@)
-        @pstate(@PSTATE_PAGEFETCHING)
       else
 
-  onFirstFetchStart : =>
+  onFetchStart : =>
     switch @pstate()
-      when @PSTATE_START, @PSTATE_IDLE, @PSTATE_CONTENT_CONSUMED, @PSTATE_FIRSTFETCH
-        @pstate(@PSTATE_FIRSTFETCH)
+      when @PSTATE_START, @PSTATE_IDLE
+        @pstate(@PSTATE_FETCHING)
       else
-        console.log("got PS_firstFetchStart in state #{@pstate()}")
+        console.log("got PS_fetchStart in state #{@pstate()}")
 
-  onFirstFetchFinish : =>
+  onFetchFinish : =>
     switch @pstate()
-      when @PSTATE_FIRSTFETCH
+      when @PSTATE_FETCHING
         @PSH_enterIdle()
       when @PSTATE_CONTENT_CONSUMED
         # do nothing, we're done
       else
-        console.log("got PS_firstFetchFinish in state #{@pstate()}")
+        console.log("got PS_fetchFinish in state #{@pstate()}")
 
-  onPageFetchStart : =>
+  onContentConsumed : =>
     switch @pstate()
-      when @PSTATE_IDLE
-        @pstate(@PSTATE_PAGEFETCHING)
-      else
-        console.log("got PS_pageFetchStart in state #{@pstate()}")
-
-  onPageFetchFinish : =>
-    switch @pstate()
-      when @PSTATE_PAGEFETCHING
-        @PSH_enterIdle()
-      when @PSTATE_CONTENT_CONSUMED
-        # do nothing, we're done
-      else
-        console.log("got PS_pageFetchFinish in state #{@pstate()}")
-
-  onResultSaidNoMore : =>
-    switch @pstate()
-      when @PSTATE_FIRSTFETCH, @PSTATE_PAGEFETCHING
+      when @PSTATE_FETCHING
         @pstate(@PSTATE_CONTENT_CONSUMED)
       else
-        console.log("got PS_resultSaidNoMore in state #{@pstate()}")
+        console.log("got PS_contentConsumed in state #{@pstate()}")
 
   # helpers related to pagination state machine
   PSH_enterIdle : =>
