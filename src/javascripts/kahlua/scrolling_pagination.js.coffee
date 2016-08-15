@@ -27,9 +27,6 @@ class Kahlua.ScrollingPagination extends QS.View
     @pstate = ko.observable(@PSTATE_START)
     @delegate = @opts.delegate
 
-    if @delegate.register?
-      @delegate.register(@)
-
     # COMPUTED
     @canaryPosition = ko.observable(0)
 
@@ -52,6 +49,10 @@ class Kahlua.ScrollingPagination extends QS.View
     @canary_checker = setInterval( =>
       @updateCanaryPosition()
     , 1000)
+
+    # now that initialization is finished, let the delegate know
+    if @delegate.register?
+      @delegate.register(@)
 
   updateCanaryPosition : =>
     # where is the canary relative to the top of the page?

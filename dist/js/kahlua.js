@@ -3,6 +3,7 @@
 
 }).call(this);
 
+(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -80,7 +81,6 @@
 
 }).call(this);
 
-(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -128,9 +128,6 @@
     ScrollingPagination.prototype.init = function() {
       this.pstate = ko.observable(this.PSTATE_START);
       this.delegate = this.opts.delegate;
-      if (this.delegate.register != null) {
-        this.delegate.register(this);
-      }
       this.canaryPosition = ko.observable(0);
       this.isCanaryVisible = ko.pureComputed((function(_this) {
         return function() {
@@ -158,11 +155,14 @@
           return state === _this.PSTATE_FIRSTFETCH || state === _this.PSTATE_PAGEFETCHING;
         };
       })(this));
-      return this.canary_checker = setInterval((function(_this) {
+      this.canary_checker = setInterval((function(_this) {
         return function() {
           return _this.updateCanaryPosition();
         };
       })(this), 1000);
+      if (this.delegate.register != null) {
+        return this.delegate.register(this);
+      }
     };
 
     ScrollingPagination.prototype.updateCanaryPosition = function() {
