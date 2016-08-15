@@ -80,3 +80,185 @@
   })(QS.View);
 
 }).call(this);
+
+(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i>{{#if : pstate() == PSTATE_CONTENT_CONSUMED }}There\'s nothing left...{{/if }}</div></div>"; };
+(function() {
+  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  Kahlua.ScrollingPagination = (function(superClass) {
+    extend(ScrollingPagination, superClass);
+
+    function ScrollingPagination() {
+      this.PSH_enterIdle = bind(this.PSH_enterIdle, this);
+      this.onResultSaidNoMore = bind(this.onResultSaidNoMore, this);
+      this.onPageFetchFinish = bind(this.onPageFetchFinish, this);
+      this.onPageFetchStart = bind(this.onPageFetchStart, this);
+      this.onFirstFetchFinish = bind(this.onFirstFetchFinish, this);
+      this.onFirstFetchStart = bind(this.onFirstFetchStart, this);
+      this.PS_canaryVisible = bind(this.PS_canaryVisible, this);
+      this.onStart = bind(this.onStart, this);
+      this.dispose = bind(this.dispose, this);
+      this.updateCanaryPosition = bind(this.updateCanaryPosition, this);
+      this.init = bind(this.init, this);
+      return ScrollingPagination.__super__.constructor.apply(this, arguments);
+    }
+
+    ScrollingPagination.registerComponent('kahlua-scrolling_pagination', {
+      template_id: 'kahlua-scrolling_pagination',
+      synchronous: true
+    });
+
+    ScrollingPagination.prototype.PSTATE_START = 0;
+
+    ScrollingPagination.prototype.PSTATE_FIRSTFETCH = 1;
+
+    ScrollingPagination.prototype.PSTATE_PRE_IDLE_COOLDOWN = 2;
+
+    ScrollingPagination.prototype.PSTATE_IDLE = 3;
+
+    ScrollingPagination.prototype.PSTATE_PAGEFETCHING = 4;
+
+    ScrollingPagination.prototype.PSTATE_PAGERENDERING = 5;
+
+    ScrollingPagination.prototype.PSTATE_CONTENT_CONSUMED = 6;
+
+    ScrollingPagination.prototype.PSTATE_ERROR = 7;
+
+    ScrollingPagination.prototype.init = function() {
+      this.pstate = ko.observable(this.PSTATE_START);
+      this.delegate = this.opts.delegate;
+      if (this.delegate.register != null) {
+        this.delegate.register(this);
+      }
+      this.canaryPosition = ko.observable(0);
+      this.isCanaryVisible = ko.pureComputed((function(_this) {
+        return function() {
+          var window;
+          window = _this.app.window_bounds();
+          return _this.canaryPosition() <= window.scrollTop + window.height;
+        };
+      })(this));
+      this.isCanaryVisible.subscribe((function(_this) {
+        return function() {
+          if (_this.isCanaryVisible()) {
+            return _this.PS_canaryVisible();
+          }
+        };
+      })(this));
+      this.isStart = ko.pureComputed((function(_this) {
+        return function() {
+          return _this.pstate() === _this.PSTATE_START;
+        };
+      })(this));
+      this.isDataLoading = ko.pureComputed((function(_this) {
+        return function() {
+          var state;
+          state = _this.pstate();
+          return state === _this.PSTATE_FIRSTFETCH || state === _this.PSTATE_PAGEFETCHING;
+        };
+      })(this));
+      return this.canary_checker = setInterval((function(_this) {
+        return function() {
+          return _this.updateCanaryPosition();
+        };
+      })(this), 1000);
+    };
+
+    ScrollingPagination.prototype.updateCanaryPosition = function() {
+      var canary, ref;
+      canary = $(this.element).find(".page-bottom-canary");
+      return this.canaryPosition((ref = canary.offset()) != null ? ref.top : void 0);
+    };
+
+    ScrollingPagination.prototype.dispose = function() {
+      clearInterval(this.canary_checker);
+      return ScrollingPagination.__super__.dispose.call(this);
+    };
+
+    ScrollingPagination.prototype.onStart = function() {
+      if (this.idle_timeout != null) {
+        cancelTimout(this.idle_timeout);
+        this.idle_timeout = null;
+      }
+      return this.pstate(this.PSTATE_START);
+    };
+
+    ScrollingPagination.prototype.PS_canaryVisible = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_IDLE:
+          this.delegate.fetchNext(this);
+          return this.pstate(this.PSTATE_PAGEFETCHING);
+      }
+    };
+
+    ScrollingPagination.prototype.onFirstFetchStart = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_START:
+        case this.PSTATE_IDLE:
+        case this.PSTATE_CONTENT_CONSUMED:
+        case this.PSTATE_FIRSTFETCH:
+          return this.pstate(this.PSTATE_FIRSTFETCH);
+        default:
+          return console.log("got PS_firstFetchStart in state " + (this.pstate()));
+      }
+    };
+
+    ScrollingPagination.prototype.onFirstFetchFinish = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_FIRSTFETCH:
+          return this.PSH_enterIdle();
+        case this.PSTATE_CONTENT_CONSUMED:
+          break;
+        default:
+          return console.log("got PS_firstFetchFinish in state " + (this.pstate()));
+      }
+    };
+
+    ScrollingPagination.prototype.onPageFetchStart = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_IDLE:
+          return this.pstate(this.PSTATE_PAGEFETCHING);
+        default:
+          return console.log("got PS_pageFetchStart in state " + (this.pstate()));
+      }
+    };
+
+    ScrollingPagination.prototype.onPageFetchFinish = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_PAGEFETCHING:
+          return this.PSH_enterIdle();
+        case this.PSTATE_CONTENT_CONSUMED:
+          break;
+        default:
+          return console.log("got PS_pageFetchFinish in state " + (this.pstate()));
+      }
+    };
+
+    ScrollingPagination.prototype.onResultSaidNoMore = function() {
+      switch (this.pstate()) {
+        case this.PSTATE_FIRSTFETCH:
+        case this.PSTATE_PAGEFETCHING:
+          return this.pstate(this.PSTATE_CONTENT_CONSUMED);
+        default:
+          return console.log("got PS_resultSaidNoMore in state " + (this.pstate()));
+      }
+    };
+
+    ScrollingPagination.prototype.PSH_enterIdle = function() {
+      this.pstate(this.PSTATE_PRE_IDLE_COOLDOWN);
+      this.idle_timeout = null;
+      return this.idle_timeout = setTimeout((function(_this) {
+        return function() {
+          _this.idle_timeout = null;
+          return _this.pstate(_this.PSTATE_IDLE);
+        };
+      })(this), 500);
+    };
+
+    return ScrollingPagination;
+
+  })(QS.View);
+
+}).call(this);
