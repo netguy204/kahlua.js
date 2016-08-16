@@ -3,6 +3,3 @@
     {{#template : {nodes: $componentTemplateNodes, data: $parent} /}}
   .page-bottom-canary
     %i.fa.fa-spin(data-bind="css : {fa-spinner: isDataLoading}")
-    {{#if : pstate() == PSTATE_CONTENT_CONSUMED }}
-    There's nothing left...
-    {{/if }}
