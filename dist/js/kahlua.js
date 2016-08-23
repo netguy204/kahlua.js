@@ -30,6 +30,7 @@
       this.left_button = $(this.element).find(".scroll-left");
       this.right_button = $(this.element).find(".scroll-right");
       this.height = this.opts.scroller_height || 180;
+      this.scroll_step = this.opts.scroll_step || 180;
       this.left = ko.observable(0);
       this.children_width = ko.observable(0);
       this.window_width = ko.observable(0);
@@ -39,7 +40,8 @@
             return _this.children_width(_this.children_width() + $(child).outerWidth(true));
           });
           _this.updateScrollBounds();
-          return $(_this.element).find('.horizontal_scroller').height(_this.height);
+          $(_this.element).find(".horizontal_scroller").height(_this.height);
+          return $(_this.element).find(".contained").width(_this.children_width());
         };
       })(this), 0);
       this.left_button_visible = ko.pureComputed((function(_this) {
@@ -64,14 +66,14 @@
     };
 
     HorizontalScroller.prototype.scrollLeft = function() {
-      this.left(this.left() + 180);
+      this.left(this.left() + this.scroll_step);
       return this.scroll_region.animate({
         left: this.left()
       }, 100);
     };
 
     HorizontalScroller.prototype.scrollRight = function() {
-      this.left(this.left() - 180);
+      this.left(this.left() - this.scroll_step);
       return this.scroll_region.animate({
         left: this.left()
       }, 100);
@@ -83,7 +85,6 @@
 
 }).call(this);
 
-(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i></div></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -177,3 +178,5 @@
   })(QS.View);
 
 }).call(this);
+
+(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i></div></div>"; };
