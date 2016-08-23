@@ -8,7 +8,7 @@ class Kahlua.HorizontalScroller extends QS.View
     @scroll_region = $(@element).find(".contained")
     @left_button = $(@element).find(".scroll-left")
     @right_button = $(@element).find(".scroll-right")
-
+    @height = @opts.scroller_height or 180
     @left = ko.observable(0)
 
     # estimate our width
@@ -19,6 +19,7 @@ class Kahlua.HorizontalScroller extends QS.View
       $(@element).find(".contained").children().each (idx, child) =>
         @children_width(@children_width() + $(child).outerWidth(true))
       @updateScrollBounds()
+      $(@element).find('.horizontal_scroller').height(@height)
     , 0)
 
     @left_button_visible = ko.pureComputed =>

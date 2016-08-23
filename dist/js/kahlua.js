@@ -29,6 +29,7 @@
       this.scroll_region = $(this.element).find(".contained");
       this.left_button = $(this.element).find(".scroll-left");
       this.right_button = $(this.element).find(".scroll-right");
+      this.height = this.opts.scroller_height || 180;
       this.left = ko.observable(0);
       this.children_width = ko.observable(0);
       this.window_width = ko.observable(0);
@@ -37,7 +38,8 @@
           $(_this.element).find(".contained").children().each(function(idx, child) {
             return _this.children_width(_this.children_width() + $(child).outerWidth(true));
           });
-          return _this.updateScrollBounds();
+          _this.updateScrollBounds();
+          return $(_this.element).find('.horizontal_scroller').height(_this.height);
         };
       })(this), 0);
       this.left_button_visible = ko.pureComputed((function(_this) {
