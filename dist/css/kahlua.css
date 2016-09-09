@@ -20,7 +20,9 @@
     color: #333; }
   .horizontal_scroller .scroll-left {
     position: absolute;
-    left: 0px; }
+    left: 0px;
+    top: 0px; }
   .horizontal_scroller .scroll-right {
     position: absolute;
-    right: 0px; }
+    right: 0px;
+    top: 0px; }

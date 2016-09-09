@@ -3,7 +3,6 @@
 
 }).call(this);
 
-(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -31,15 +30,24 @@
       this.right_button = $(this.element).find(".scroll-right");
       this.height = this.opts.scroller_height || 180;
       this.scroll_step = this.opts.scroll_step || 180;
+      this.fixed_width = this.opts.fixed_width || 0;
       this.left = ko.observable(0);
       this.children_width = ko.observable(0);
       this.window_width = ko.observable(0);
+      if (this.fixed_width === 0) {
+        setTimeout((function(_this) {
+          return function() {
+            $(_this.element).find(".contained").children().each(function(idx, child) {
+              return _this.children_width(_this.children_width() + $(child).outerWidth(true));
+            });
+            return _this.updateScrollBounds();
+          };
+        })(this), 0);
+      } else {
+        this.children_width(this.fixed_width);
+      }
       setTimeout((function(_this) {
         return function() {
-          $(_this.element).find(".contained").children().each(function(idx, child) {
-            return _this.children_width(_this.children_width() + $(child).outerWidth(true));
-          });
-          _this.updateScrollBounds();
           $(_this.element).find(".horizontal_scroller").height(_this.height);
           return $(_this.element).find(".contained").width(_this.children_width());
         };
@@ -85,6 +93,7 @@
 
 }).call(this);
 
+(window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
