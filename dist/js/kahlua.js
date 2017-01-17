@@ -5,6 +5,148 @@
 
 (window.JST || (window.JST = {}))["kahlua-horizontal_scroller"] = function() { return "<div class=\"horizontal_scroller\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><a data-bind=\"click : scrollLeft, visible : left_button_visible\" class=\"scroller scroll-left\"><i class=\"icon-chevron-left\"></i></a><a data-bind=\"click : scrollRight, visible : right_button_visible\" class=\"scroller scroll-right\"><i class=\"icon-chevron-right\"></i></a></div>"; };
 (function() {
+  Kahlua.utils || (Kahlua.utils = {});
+
+  Kahlua.utils.sortWithIDOrder = function(models, ids_array, opts) {
+    var df, ids;
+    if (opts == null) {
+      opts = {};
+    }
+    df = opts["default"];
+    if (df == null) {
+      df = Number.POSITIVE_INFINITY;
+    }
+    ids = ko.unwrap(ids_array);
+    if ((ids == null) || ids.length === 0) {
+      return models;
+    }
+    return models.sort(function(m1, m2) {
+      var m1v, m2v;
+      m1v = ids.indexOf(m1.id());
+      if (m1v === -1) {
+        m1v = def;
+      }
+      m2v = ids.indexOf(m2.id());
+      if (m2v === -1) {
+        m2v = def;
+      }
+      return m1v - m2v;
+    });
+  };
+
+}).call(this);
+
+(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i></div></div>"; };
+(function() {
+  ko.bindingHandlers.draggable = {
+    init: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
+      var $drop_els, $el, opts, transfer_data;
+      opts = ko.unwrap(valueAccessor());
+      opts.model_class || (opts.model_class = viewModel.model.getClass().name);
+      $el = $(element);
+      $el.attr('draggable', true);
+      $drop_els = null;
+      transfer_data = {
+        model_data: viewModel.model.toJS(),
+        model_class: opts.model_class
+      };
+      $el.on('dragstart', function(ev) {
+        ev.originalEvent.dataTransfer.setData('model_data', JSON.stringify(transfer_data.model_data));
+        ev.originalEvent.dataTransfer.setData('model_class', transfer_data.model_class);
+        $el.addClass('dragging');
+        return $drop_els = $('[droppable=true]');
+      });
+      $el.on('dragend', function(ev) {
+        $('.dragover').removeClass('dragover');
+        $el.removeClass('dragging');
+        return $drop_els.each(function() {
+          var dropView;
+          dropView = ko.dataFor(this);
+          if ((dropView != null) && (dropView.handleModelDragOver != null)) {
+            return dropView.handleModelDragOver(transfer_data, {
+              hit: false,
+              dragend: true,
+              target: this
+            });
+          }
+        });
+      });
+      return $el.on('drag', function(ev) {
+        var point;
+        point = {
+          x: ev.originalEvent.pageX,
+          y: ev.originalEvent.pageY
+        };
+        return $drop_els.each(function() {
+          var $drop, dropView, hit;
+          $drop = $(this);
+          hit = QS.utils.elementContainsPoint(this, point);
+          dropView = ko.dataFor(this);
+          if ((dropView != null) && (dropView.handleModelDragOver != null)) {
+            return dropView.handleModelDragOver(transfer_data, {
+              hit: hit,
+              point: point,
+              target: this
+            });
+          } else {
+            if (hit) {
+              return $drop.addClass('dragover');
+            } else {
+              if ($drop.hasClass('dragover')) {
+                return $drop.removeClass('dragover');
+              }
+            }
+          }
+        });
+      });
+    },
+    update: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
+      var $el, opts;
+      opts = ko.unwrap(valueAccessor());
+      $el = $(element);
+      return $el.attr('draggable', (opts["if"] == null) || opts["if"] === true);
+    }
+  };
+
+  ko.bindingHandlers.droppable = {
+    init: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
+      var $el, enter_count, opts;
+      opts = viewModel.droppable_opts = ko.unwrap(valueAccessor());
+      enter_count = 0;
+      $el = $(element);
+      $el.attr('droppable', true);
+      $el.on('dragover', function(ev) {
+        return ev.preventDefault();
+      });
+
+      /*
+      		$el.on 'dragenter', (ev)->
+      			enter_count += 1
+      			if enter_count == 1
+      				$target = $(ev.target)
+      				$target.addClass('dragover')
+      		$el.on 'dragleave', (ev)->
+      			enter_count -= 1
+      			if enter_count == 0
+      				$target = $(ev.target)
+      				$target.removeClass('dragover')
+       */
+      return $el.on('drop', function(ev) {
+        var transfer, transfer_data;
+        transfer = ev.originalEvent.dataTransfer;
+        transfer_data = {};
+        transfer_data.model_data = JSON.parse(transfer.getData('model_data'));
+        transfer_data.model_class = transfer.getData('model_class');
+        return typeof viewModel.handleModelDrop === "function" ? viewModel.handleModelDrop(transfer_data, {
+          event: ev
+        }) : void 0;
+      });
+    }
+  };
+
+}).call(this);
+
+(function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -188,7 +330,6 @@
 
 }).call(this);
 
-(window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i></div></div>"; };
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
