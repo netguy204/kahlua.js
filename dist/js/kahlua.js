@@ -24,11 +24,11 @@
       var m1v, m2v;
       m1v = ids.indexOf(m1.id());
       if (m1v === -1) {
-        m1v = def;
+        m1v = df;
       }
       m2v = ids.indexOf(m2.id());
       if (m2v === -1) {
-        m2v = def;
+        m2v = df;
       }
       return m1v - m2v;
     });
