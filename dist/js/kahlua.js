@@ -147,6 +147,67 @@
 }).call(this);
 
 (function() {
+  ko.bindingHandlers.highchart = {
+    init: function(element, valueAccessor, allBindings, viewModel) {
+      var chart, init_opts, opts, oupd, series, supd;
+      series = valueAccessor();
+      opts = allBindings.get('highchartOptions') || {
+        chart: {}
+      };
+      init_opts = ko.unwrap(opts);
+      init_opts.series = ko.unwrap(series);
+      init_opts.chart.renderTo = element;
+      chart = new Highcharts.Chart(init_opts);
+      supd = ko.computed(function() {
+        var i, ids, idx, j, len, ref, results, rs, s, sd;
+        sd = ko.unwrap(series);
+        ids = (function() {
+          var i, len, results;
+          results = [];
+          for (i = 0, len = sd.length; i < len; i++) {
+            s = sd[i];
+            results.push(s.id);
+          }
+          return results;
+        })();
+        for (idx = i = ref = chart.series.length - 1; i >= 0; idx = i += -1) {
+          s = chart.series[idx];
+          if (!ids.includes(s.options.id)) {
+            s.remove();
+          }
+        }
+        results = [];
+        for (j = 0, len = sd.length; j < len; j++) {
+          s = sd[j];
+          rs = chart.get(s.id);
+          if (rs) {
+            results.push(rs.setData(s.data));
+          } else {
+            results.push(chart.addSeries(s));
+          }
+        }
+        return results;
+      });
+      if (ko.isObservable(opts)) {
+        oupd = opts.subscribe(function(topts) {
+          return chart.update(topts);
+        });
+      }
+      return ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+        if (supd) {
+          supd.dispose();
+        }
+        if (oupd) {
+          oupd.dispose();
+        }
+        return chart.destroy();
+      });
+    }
+  };
+
+}).call(this);
+
+(function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
