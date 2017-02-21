@@ -215,19 +215,26 @@
       $el = $(element);
       obs = valueAccessor();
       vis_cls = bindingsAccessor.get('menuVisibleClass');
+      if (vis_cls == null) {
+        if (obs()) {
+          $el.show();
+        } else {
+          $el.hide();
+        }
+      }
       obs_sub = obs.subscribe(function(val) {
         if (val) {
           if (vis_cls != null) {
             $el.addClass(vis_cls);
           } else {
-            $el.fadeIn('fast');
+            $el.show();
           }
           return obs.menu_visible_at = Date.now();
         } else {
           if (vis_cls != null) {
             return $el.removeClass(vis_cls);
           } else {
-            return $el.fadeOut('fast');
+            return $el.hide();
           }
         }
       });
