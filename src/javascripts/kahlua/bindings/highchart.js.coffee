@@ -6,6 +6,7 @@ ko.bindingHandlers.highchart =
     init_opts.series = ko.unwrap(series)
     init_opts.chart.renderTo = element
     chart = new Highcharts.Chart(init_opts)
+    chart.ownerView = viewModel
 
     supd = ko.computed ->
       sd = ko.unwrap(series)

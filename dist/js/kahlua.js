@@ -158,6 +158,7 @@
       init_opts.series = ko.unwrap(series);
       init_opts.chart.renderTo = element;
       chart = new Highcharts.Chart(init_opts);
+      chart.ownerView = viewModel;
       supd = ko.computed(function() {
         var i, ids, idx, j, len, ref, results, rs, s, sd;
         sd = ko.unwrap(series);
@@ -201,6 +202,50 @@
           oupd.dispose();
         }
         return chart.destroy();
+      });
+    }
+  };
+
+}).call(this);
+
+(function() {
+  ko.bindingHandlers.menuVisible = {
+    init: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
+      var $el, obs, obs_sub, vis_cls;
+      $el = $(element);
+      obs = valueAccessor();
+      vis_cls = bindingsAccessor.get('menuVisibleClass');
+      obs_sub = obs.subscribe(function(val) {
+        if (val) {
+          if (vis_cls != null) {
+            $el.addClass(vis_cls);
+          } else {
+            $el.fadeIn('fast');
+          }
+          return obs.menu_visible_at = Date.now();
+        } else {
+          if (vis_cls != null) {
+            return $el.removeClass(vis_cls);
+          } else {
+            return $el.fadeOut('fast');
+          }
+        }
+      });
+      $(document).on('click.menuVisible', function(ev) {
+        if (obs() === true && (obs.menu_visible_at != null) && (Date.now() - obs.menu_visible_at) > 100) {
+          QS.log("Hiding menu.");
+          return obs(false);
+        }
+      });
+      $el.on('click.menuVisible', function(ev) {
+        return obs(false);
+      });
+      return ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+        if (obs_sub != null) {
+          obs_sub.dispose();
+        }
+        $(document).off('click.menuVisible');
+        return $el.off('click.menuVisible');
       });
     }
   };
