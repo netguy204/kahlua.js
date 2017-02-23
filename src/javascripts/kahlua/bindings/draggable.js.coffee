@@ -21,7 +21,7 @@ ko.bindingHandlers.draggable =
 			$drop_els.each ->
 				dropView = ko.dataFor(this)
 				if dropView? && dropView.handleModelDragOver?
-					dropView.handleModelDragOver(transfer_data, {hit: false, dragend: true, target: this})
+					dropView.handleModelDragOver(transfer_data, {hit: false, dragend: true, target: this, element: element})
 
 		$el.on 'drag', (ev)->
 			point = {x: ev.originalEvent.pageX, y: ev.originalEvent.pageY}
@@ -31,7 +31,7 @@ ko.bindingHandlers.draggable =
 				hit = QS.utils.elementContainsPoint(this, point)
 				dropView = ko.dataFor(this)
 				if dropView? && dropView.handleModelDragOver?
-					dropView.handleModelDragOver(transfer_data, {hit: hit, point: point, target: this})
+					dropView.handleModelDragOver(transfer_data, {hit: hit, point: point, target: this, element: element})
 				else
 					if hit
 						$drop.addClass('dragover')
@@ -68,5 +68,5 @@ ko.bindingHandlers.droppable =
 			transfer_data = {}
 			transfer_data.model_data = JSON.parse(transfer.getData('model_data'))
 			transfer_data.model_class = transfer.getData('model_class')
-			viewModel.handleModelDrop?(transfer_data, {event: ev})
+			viewModel.handleModelDrop?(transfer_data, {event: ev, element: element})
 

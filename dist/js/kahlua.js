@@ -66,7 +66,8 @@
             return dropView.handleModelDragOver(transfer_data, {
               hit: false,
               dragend: true,
-              target: this
+              target: this,
+              element: element
             });
           }
         });
@@ -86,7 +87,8 @@
             return dropView.handleModelDragOver(transfer_data, {
               hit: hit,
               point: point,
-              target: this
+              target: this,
+              element: element
             });
           } else {
             if (hit) {
@@ -138,7 +140,8 @@
         transfer_data.model_data = JSON.parse(transfer.getData('model_data'));
         transfer_data.model_class = transfer.getData('model_class');
         return typeof viewModel.handleModelDrop === "function" ? viewModel.handleModelDrop(transfer_data, {
-          event: ev
+          event: ev,
+          element: element
         }) : void 0;
       });
     }
