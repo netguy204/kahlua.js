@@ -258,8 +258,6 @@
 
     TouchDragDrop.prototype.dispatchDrop = function(element, tev) {
       var evt;
-      QS.log('handing drop');
-      QS.log(element);
       evt = this.buildEventFromTouchEvent(tev, "drop");
       evt.dataTransfer = {};
       evt.dataTransfer.getData = (function(_this) {
