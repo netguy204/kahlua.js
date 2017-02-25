@@ -141,8 +141,6 @@ class ko.bindingHandlers.draggable.TouchDragDrop
 			evt = @buildEventFromTouchEvent(tev, "drag")
 			@element.dispatchEvent(evt)
 		dispatchDrop: (element, tev)->
-			QS.log 'handing drop'
-			QS.log element
 			evt = @buildEventFromTouchEvent(tev, "drop")
 			evt.dataTransfer = {}
 			evt.dataTransfer.getData = (type)=>
