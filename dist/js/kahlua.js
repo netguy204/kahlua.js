@@ -38,6 +38,9 @@
 
 (window.JST || (window.JST = {}))["kahlua-scrolling_pagination"] = function() { return "<div class=\"scrolling-pagination\"><div class=\"contained\">{{#template : {nodes: $componentTemplateNodes, data: $parent} /}}</div><div class=\"page-bottom-canary\"><i data-bind=\"css : {fa-spinner: isDataLoading}\" class=\"fa fa-spin\"></i></div></div>"; };
 (function() {
+  var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
   ko.bindingHandlers.draggable = {
     init: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
       var $drop_els, $el, opts, transfer_data;
@@ -72,7 +75,7 @@
           }
         });
       });
-      return $el.on('drag', function(ev) {
+      $el.on('drag', function(ev) {
         var point;
         point = {
           x: ev.originalEvent.pageX,
@@ -101,6 +104,26 @@
           }
         });
       });
+      if (!(indexOf.call(document.createElement('span'), 'draggable') >= 0)) {
+        $el.on('touchmove', function(ev) {
+          var dd;
+          if ($el.attr('draggable') !== "true") {
+            return;
+          }
+          dd = $el.data('touchdragdrop');
+          if (dd == null) {
+            dd = new ko.bindingHandlers.draggable.TouchDragDrop(element);
+          }
+          return dd.handleTouchMove(ev);
+        });
+      }
+      return ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+        var dd;
+        dd = $el.data('touchdragdrop');
+        if (dd != null) {
+          return dd.clean();
+        }
+      });
     },
     update: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
       var $el, opts;
@@ -109,6 +132,157 @@
       return $el.attr('draggable', (opts["if"] == null) || opts["if"] === true);
     }
   };
+
+  ko.bindingHandlers.draggable.TouchDragDrop = (function() {
+    function TouchDragDrop(element, opts) {
+      if (opts == null) {
+        opts = {};
+      }
+      this.copyStyle = bind(this.copyStyle, this);
+      this.clean = bind(this.clean, this);
+      this.handleTouchEnd = bind(this.handleTouchEnd, this);
+      this.handleTouchMove = bind(this.handleTouchMove, this);
+      this.element = element;
+      this.transfer_data = {};
+      this.jel = opts.jquery_element || $(element);
+      this.drag_node = this.duplicateNode(element);
+      this.jel.on('touchend', this.handleTouchEnd);
+      this.jel.data('touchdragdrop', this);
+      this.dispatchDragStart();
+    }
+
+    TouchDragDrop.prototype.handleTouchMove = function(ev) {
+      var $dn, dnh, dnw, touch;
+      ev.preventDefault();
+      $dn = $(this.drag_node);
+      touch = ev.originalEvent.changedTouches[0];
+      dnw = this.drag_node.offsetWidth;
+      dnh = this.drag_node.offsetHeight;
+      $dn.css({
+        top: touch.pageY - dnh / 2,
+        left: touch.pageX - dnw / 2
+      });
+      return this.dispatchDrag(ev);
+    };
+
+    TouchDragDrop.prototype.handleTouchEnd = function(ev) {
+      var $drop_els, point, self, touch;
+      touch = ev.originalEvent.changedTouches[0];
+      point = {
+        x: touch.pageX,
+        y: touch.pageY
+      };
+      $drop_els = $('[droppable=true]');
+      self = this;
+      $drop_els.each(function() {
+        if (this === self.drag_node) {
+          return;
+        }
+        if (QS.utils.elementContainsPoint(this, point)) {
+          return self.dispatchDrop(this, ev);
+        }
+      });
+      this.dispatchDragEnd();
+      return this.clean();
+    };
+
+    TouchDragDrop.prototype.clean = function() {
+      this.drag_node.parentNode.removeChild(this.drag_node);
+      this.jel.off('touchend', this.handleTouchEnd);
+      return this.jel.data('touchdragdrop', null);
+    };
+
+    TouchDragDrop.prototype.duplicateNode = function() {
+      var new_node;
+      new_node = this.element.cloneNode(true);
+      this.copyStyle(this.element, new_node);
+      new_node.style.opacity = "0.5";
+      new_node.style.position = "absolute";
+      new_node.style.zIndex = "999999";
+      document.body.appendChild(new_node);
+      return new_node;
+    };
+
+    TouchDragDrop.prototype.copyStyle = function(srcNode, dstNode) {
+      var cs, csName, i, j, k, len, ref, results;
+      if (srcNode.nodeType === 1) {
+        dstNode.removeAttribute("id");
+        dstNode.removeAttribute("class");
+        dstNode.removeAttribute("style");
+        dstNode.removeAttribute("draggable");
+        cs = window.getComputedStyle(srcNode);
+        for (i = 0, len = cs.length; i < len; i++) {
+          csName = cs[i];
+          dstNode.style.setProperty(csName, cs.getPropertyValue(csName), cs.getPropertyPriority(csName));
+        }
+        dstNode.style.pointerEvents = "none";
+      }
+      if (srcNode.hasChildNodes()) {
+        results = [];
+        for (j = k = 0, ref = srcNode.childNodes.length; 0 <= ref ? k < ref : k > ref; j = 0 <= ref ? ++k : --k) {
+          results.push(this.copyStyle(srcNode.childNodes[j], dstNode.childNodes[j]));
+        }
+        return results;
+      }
+    };
+
+    TouchDragDrop.prototype.dispatchDragStart = function() {
+      var evt;
+      evt = document.createEvent("Event");
+      evt.initEvent("dragstart", true, true);
+      evt.transfer_data;
+      evt.dataTransfer = {};
+      evt.dataTransfer.setData = (function(_this) {
+        return function(type, val) {
+          return _this.transfer_data[type] = val;
+        };
+      })(this);
+      evt.dataTransfer.setDragImage = function(el, x, y) {
+        return this.drag_node = el;
+      };
+      return this.element.dispatchEvent(evt);
+    };
+
+    TouchDragDrop.prototype.dispatchDragEnd = function() {
+      var evt;
+      evt = document.createEvent("Event");
+      evt.initEvent("dragend", true, true);
+      return this.element.dispatchEvent(evt);
+    };
+
+    TouchDragDrop.prototype.dispatchDrag = function(tev) {
+      var evt;
+      evt = this.buildEventFromTouchEvent(tev, "drag");
+      return this.element.dispatchEvent(evt);
+    };
+
+    TouchDragDrop.prototype.dispatchDrop = function(element, tev) {
+      var evt;
+      QS.log('handing drop');
+      QS.log(element);
+      evt = this.buildEventFromTouchEvent(tev, "drop");
+      evt.dataTransfer = {};
+      evt.dataTransfer.getData = (function(_this) {
+        return function(type) {
+          return _this.transfer_data[type];
+        };
+      })(this);
+      return element.dispatchEvent(evt);
+    };
+
+    TouchDragDrop.prototype.buildEventFromTouchEvent = function(tev, name) {
+      var evt, touch;
+      evt = document.createEvent("Event");
+      evt.initEvent(name, true, true);
+      touch = tev.originalEvent.changedTouches[0];
+      evt.pageX = touch.pageX;
+      evt.pageY = touch.pageY;
+      return evt;
+    };
+
+    return TouchDragDrop;
+
+  })();
 
   ko.bindingHandlers.droppable = {
     init: function(element, valueAccessor, bindingsAccessor, viewModel, bindingContext) {
