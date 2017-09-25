@@ -22,7 +22,12 @@ ko.bindingHandlers.highchart =
         rs = chart.get(s.id)
         if rs
           # update series
-          rs.setData(s.data)
+          if s.hasNewOptions == true
+            rs.update(s)
+            s.hasNewOptions = false
+          else if s.hasNewData == true
+            rs.setData(s.data)
+            s.hasNewData = false
         else
           chart.addSeries(s)
 
@@ -30,7 +35,11 @@ ko.bindingHandlers.highchart =
       oupd = opts.subscribe (topts)->
         chart.update(topts)
 
+    viewModel.onHighchartInit?(chart)
+
     ko.utils.domNodeDisposal.addDisposeCallback element, ->
       supd.dispose() if supd
       oupd.dispose() if oupd
       chart.destroy()
+      viewModel.onHighchartDestroyed?(chart)
+      
