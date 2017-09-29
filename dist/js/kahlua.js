@@ -640,10 +640,18 @@
           rs = chart.get(s.id);
           if (rs) {
             if (s.hasNewOptions === true) {
-              rs.update(s);
+              if (rs.update) {
+                rs.update(s);
+              } else {
+                chart.addSeries(s);
+              }
               results.push(s.hasNewOptions = false);
             } else if (s.hasNewData === true) {
-              rs.setData(s.data);
+              if (rs.setData) {
+                rs.setData(s.data);
+              } else {
+                chart.addSeries(s);
+              }
               results.push(s.hasNewData = false);
             } else {
               results.push(void 0);
@@ -674,6 +682,13 @@
       });
     }
   };
+
+  [
+    obs({
+      opts: obs({}),
+      data: obs([])
+    })
+  ];
 
 }).call(this);
 

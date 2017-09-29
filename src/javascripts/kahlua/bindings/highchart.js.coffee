@@ -23,10 +23,16 @@ ko.bindingHandlers.highchart =
         if rs
           # update series
           if s.hasNewOptions == true
-            rs.update(s)
+            if rs.update
+              rs.update(s)
+            else
+              chart.addSeries(s)
             s.hasNewOptions = false
           else if s.hasNewData == true
-            rs.setData(s.data)
+            if rs.setData
+              rs.setData(s.data)
+            else
+              chart.addSeries(s)
             s.hasNewData = false
         else
           chart.addSeries(s)
@@ -43,3 +49,4 @@ ko.bindingHandlers.highchart =
       chart.destroy()
       viewModel.onHighchartDestroyed?(chart)
       
+[ obs( { opts: obs({}), data: obs([])})]
