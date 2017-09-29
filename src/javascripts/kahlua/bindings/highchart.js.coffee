@@ -48,5 +48,3 @@ ko.bindingHandlers.highchart =
       oupd.dispose() if oupd
       chart.destroy()
       viewModel.onHighchartDestroyed?(chart)
-      
-[ obs( { opts: obs({}), data: obs([])})]
